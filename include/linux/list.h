@@ -1,6 +1,10 @@
 #ifndef _LINUX_LIST_H
 #define _LINUX_LIST_H
 
+#ifndef NULL
+	#define NULL    0
+#endif
+
 /*
  * Simple doubly linked list implementation.
  *

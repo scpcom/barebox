@@ -424,3 +424,4 @@ void early_console_start(const char *name, int baudrate)
 }
 
 #endif
+

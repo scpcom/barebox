@@ -6,7 +6,7 @@
  * Created:
  * Description:
  *
- * Rev:          $Id: ashldi3.c 2775 2007-02-21 13:58:44Z hennerich $
+ * Rev:          $Id: ashldi3.c,v 1.1.1.1 2014/03/12 12:17:40 wokes Exp $
  *
  * Modified:
  *               Copyright 2004-2006 Analog Devices Inc.

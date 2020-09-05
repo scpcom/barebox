@@ -12,7 +12,7 @@
  *                 R0  -  returns remainder.
  *                 R2-R7
  *
- * Rev:          $Id: modsi3.S 2775 2007-02-21 13:58:44Z hennerich $
+ * Rev:          $Id: modsi3.S,v 1.1.1.1 2014/03/12 12:17:40 wokes Exp $
  *
  * Modified:
  *               Copyright 2004-2006 Analog Devices Inc.

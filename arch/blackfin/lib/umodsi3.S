@@ -6,7 +6,7 @@
  * Created:
  * Description:  libgcc1 routines for Blackfin 5xx
  *
- * Rev:          $Id: umodsi3.S 2769 2007-02-19 16:45:53Z hennerich $
+ * Rev:          $Id: umodsi3.S,v 1.1.1.1 2014/03/12 12:17:40 wokes Exp $
  *
  * Modified:
  *               Copyright 2004-2006 Analog Devices Inc.

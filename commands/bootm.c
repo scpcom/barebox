@@ -44,6 +44,9 @@
 #include <init.h>
 #include <asm-generic/memory_layout.h>
 
+#ifdef CONFIG_NAND_COMCERTO_ECC_HW_BCH
+extern uint32_t temp_nand_ecc_errors[];
+#endif
 /*
  *  Continue booting an OS image; caller already has:
  *  - copied image header to global variable `header'
@@ -198,6 +201,12 @@ struct image_handle *map_image(const char *filename, int verify)
 		puts ("   Verifying Checksum ... ");
 		if (crc32 (0, handle->data, len) != image_get_dcrc(header)) {
 			printf ("Bad Data CRC\n");
+
+#ifdef CONFIG_NAND_COMCERTO_ECC_HW_BCH
+			uint8_t i;
+			for (i = 0; i < 4; i++)
+				printf("temp_nand_ecc_errors[%d] = %d \n", i, temp_nand_ecc_errors[i]);
+#endif
 			goto err_out;
 		}
 		puts ("OK\n");

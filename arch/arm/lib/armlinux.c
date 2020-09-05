@@ -221,7 +221,7 @@ void start_linux(void *adr, int swap, struct image_data *data)
 
 	setup_tags(data, swap);
 
-	shutdown_barebox();
+	//shutdown_barebox();
 	if (swap) {
 		u32 reg;
 		__asm__ __volatile__("mrc p15, 0, %0, c1, c0" : "=r" (reg));

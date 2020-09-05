@@ -5,7 +5,7 @@
  *                     Steven J. Hill <sjhill@realitydiluted.com>
  *		       Thomas Gleixner <tglx@linutronix.de>
  *
- * $Id: nand.h,v 1.74 2005/09/15 13:58:50 vwool Exp $
+ * $Id: nand.h,v 1.1.1.1 2014/03/12 12:17:40 wokes Exp $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -45,8 +45,13 @@ extern void nand_wait_ready(struct mtd_info *mtd);
  * is supported now. If you add a chip with bigger oobsize/page
  * adjust this accordingly.
  */
+#ifndef CONFIG_COMCERTO_NAND_ULOADER
 #define NAND_MAX_OOBSIZE	576
 #define NAND_MAX_PAGESIZE	8192
+#else
+#define NAND_MAX_OOBSIZE	128
+#define NAND_MAX_PAGESIZE	4096
+#endif
 
 /*
  * Constants for hardware specific CLE/ALE/NCE function
@@ -80,6 +85,7 @@ extern void nand_wait_ready(struct mtd_info *mtd);
 #define NAND_CMD_RNDIN		0x85
 #define NAND_CMD_READID		0x90
 #define NAND_CMD_ERASE2		0xd0
+#define NAND_CMD_PARAM		0xec
 #define NAND_CMD_RESET		0xff
 
 /* Extended commands for large page devices */
@@ -123,6 +129,7 @@ typedef enum {
 	NAND_ECC_SOFT,
 	NAND_ECC_HW,
 	NAND_ECC_HW_SYNDROME,
+	NAND_ECC_SOFT_BCH,
 } nand_ecc_modes_t;
 
 /*
@@ -217,6 +224,70 @@ typedef enum {
 /* Keep gcc happy */
 struct nand_chip;
 
+struct nand_onfi_params {
+	/* rev info and features block */
+	/* 'O' 'N' 'F' 'I'  */
+	u8 sig[4];
+	__le16 revision;
+	__le16 features;
+	__le16 opt_cmd;
+	u8 reserved[22];
+
+	/* manufacturer information block */
+	char manufacturer[12];
+	char model[20];
+	u8 jedec_id;
+	__le16 date_code;
+	u8 reserved2[13];
+
+	/* memory organization block */
+	__le32 byte_per_page;
+	__le16 spare_bytes_per_page;
+	__le32 data_bytes_per_ppage;
+	__le16 spare_bytes_per_ppage;
+	__le32 pages_per_block;
+	__le32 blocks_per_lun;
+	u8 lun_count;
+	u8 addr_cycles;
+	u8 bits_per_cell;
+	__le16 bb_per_lun;
+	__le16 block_endurance;
+	u8 guaranteed_good_blocks;
+	__le16 guaranteed_block_endurance;
+	u8 programs_per_page;
+	u8 ppage_attr;
+	u8 ecc_bits;
+	u8 interleaved_bits;
+	u8 interleaved_ops;
+	u8 reserved3[13];
+
+	/* electrical parameter block */
+	u8 io_pin_capacitance_max;
+	__le16 async_timing_mode;
+	__le16 program_cache_timing_mode;
+	__le16 t_prog;
+	__le16 t_bers;
+	__le16 t_r;
+	__le16 t_ccs;
+	__le16 src_sync_timing_mode;
+	__le16 src_ssync_features;
+	__le16 clk_pin_capacitance_typ;
+	__le16 io_pin_capacitance_typ;
+	__le16 input_pin_capacitance_typ;
+	u8 input_pin_capacitance_max;
+	u8 driver_strenght_support;
+	__le16 t_int_r;
+	__le16 t_ald;
+	u8 reserved4[7];
+
+	/* vendor */
+	u8 reserved5[90];
+
+	__le16 crc;
+} __attribute__((packed));
+
+#define ONFI_CRC_BASE	0x4F4E
+
 /**
  * struct nand_hw_control - Control structure for hardware controller (e.g ECC generator) shared among independent devices
  * @lock:               protection lock
@@ -258,6 +329,7 @@ struct nand_ecc_ctrl {
 	int			prepad;
 	int			postpad;
 	struct nand_ecclayout	*layout;
+	void			*priv;
 	void			(*hwctl)(struct mtd_info *mtd, int mode);
 	int			(*calculate)(struct mtd_info *mtd,
 					     const uint8_t *dat,
@@ -274,6 +346,10 @@ struct nand_ecc_ctrl {
 	int			(*read_page)(struct mtd_info *mtd,
 					     struct nand_chip *chip,
 					     uint8_t *buf);
+	int			(*read_subpage)(struct mtd_info *mtd,
+						struct nand_chip *chip,
+						uint32_t offs,
+						uint32_t len, uint8_t *buf);
 	void			(*write_page)(struct mtd_info *mtd,
 					      struct nand_chip *chip,
 					      const uint8_t *buf);
@@ -313,7 +389,7 @@ struct nand_buffers {
  * @select_chip:	[REPLACEABLE] select chip nr
  * @block_bad:		[REPLACEABLE] check, if the block is bad
  * @block_markbad:	[REPLACEABLE] mark the block bad
- * @cmd_ctrl:		[BOARDSPECIFIC] hardwarespecific funtion for controlling
+ * @cmd_ctrl:		[BOARDSPECIFIC] hardwarespecific function for controlling
  *			ALE/CLE/nCE. Also used to write command and address
  * @dev_ready:		[BOARDSPECIFIC] hardwarespecific function for accesing device ready/busy line
  *			If set to NULL no access to ready/busy is available and the ready/busy information
@@ -347,6 +423,10 @@ struct nand_buffers {
  * @pagemask:		[INTERN] page number mask = number of (pages / chip) - 1
  * @pagebuf:		[INTERN] holds the pagenumber which is currently in data_buf
  * @subpagesize:	[INTERN] holds the subpagesize
+ * @onfi_version:	[INTERN] holds the chip ONFI version (BCD encoded),
+ *			non 0 if ONFI supported.
+ * @onfi_params:	[INTERN] holds the ONFI page parameter when ONFI is
+ *			supported, 0 otherwise.
  * @ecclayout:		[REPLACEABLE] the default ecc placement scheme
  * @bbt:		[INTERN] bad block table pointer
  * @bbt_td:		[REPLACEABLE] bad block table descriptor for flash lookup
@@ -391,12 +471,15 @@ struct nand_chip {
 	int		bbt_erase_shift;
 	int		chip_shift;
 	int		numchips;
-	unsigned long	chipsize;
+	uint64_t	chipsize;
 	int		pagemask;
 	int		pagebuf;
 	int		subpagesize;
 	uint8_t		cellinfo;
 	int		badblockpos;
+
+	int onfi_version;
+	struct nand_onfi_params onfi_params;
 
 	nand_state_t	state;
 
@@ -614,5 +697,10 @@ struct platform_nand_chip *get_platform_nandchip(struct mtd_info *mtd)
 }
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
+
+extern int nand_read_page_swecc(struct mtd_info *, struct nand_chip *, uint8_t *);
+extern void nand_write_page_swecc(struct mtd_info *mtd, struct nand_chip *chip,
+				  const uint8_t *buf);
+
 
 #endif /* __LINUX_MTD_NAND_H */

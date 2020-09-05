@@ -12,4 +12,8 @@ config I2C_OMAP
 	bool "OMAP I2C Master driver"
 	depends on ARCH_OMAP
 
+config I2C_C2K
+	bool "C2K I2C Master driver"
+	depends on ARCH_COMCERTO
+
 endmenu

@@ -212,3 +212,4 @@ BAREBOX_CMD_START(i2c_read)
 	.usage		= "read from an i2c device",
 	BAREBOX_CMD_HELP(cmd_i2c_read_help)
 BAREBOX_CMD_END
+

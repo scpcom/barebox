@@ -8,6 +8,9 @@ if [ x$1 = xnand ]; then
 elif [ x$1 = xnor ]; then
 	rootfs_loc=nor
 	kernel_loc=nor
+elif [ x$1 = xsata ]; then
+	rootfs_loc=sata
+	kernel_loc=sata
 elif [ x$1 = xnfs ]; then
 	rootfs_loc=net
 	kernel_loc=nfs
@@ -29,6 +32,8 @@ if [ x$rootfs_loc = xnet ]; then
 	bootargs="$bootargs root=/dev/nfs nfsroot=$nfsroot,v3,tcp noinitrd"
 elif [ x$rootfs_loc = xinitrd ]; then
 	bootargs="$bootargs root=/dev/ram0 rdinit=/sbin/init"
+elif [ x$rootfs_loc = xsata ]; then
+	bootargs="$bootargs root=/dev/sda2 rootfstype=$rootfs_type rw noinitrd"
 else
 	if [ x$rootfs_loc = xnand ]; then
 		rootfs_mtdblock=$rootfs_mtdblock_nand
@@ -38,18 +43,22 @@ else
 
 	if [ x$rootfs_type = xubifs ]; then
 		if [ -z $ubiroot ]; then
-			ubiroot="root"
+			ubiroot="rootfs"
 		fi
-		bootargs="$bootargs root=ubi0:$ubiroot ubi.mtd=$rootfs_mtdblock"
+		if [ x$rootfs_loc = xnand ]; then
+			bootargs="$bootargs root=ubi0:$ubiroot ubi.mtd=$rootfs_mtdblock,4096"
+		else
+			bootargs="$bootargs root=ubi0:$ubiroot ubi.mtd=$rootfs_mtdblock"
+		fi
 	else
 		bootargs="$bootargs root=/dev/mtdblock$rootfs_mtdblock"
 	fi
 
-	bootargs="$bootargs rootfstype=$rootfs_type noinitrd"
+	bootargs="$bootargs rootfstype=$rootfs_type rw noinitrd"
 fi
 
 if [ -n $nor_parts ]; then
-	mtdparts="${mtdparts}physmap-flash.0:${nor_parts}"
+	mtdparts="${mtdparts}${nor_device}:${nor_parts}"
 fi
 
 if [ -n $nand_parts ]; then
@@ -63,6 +72,7 @@ if [ -n $mtdparts ]; then
 	bootargs="${bootargs} mtdparts=${mtdparts}"
 fi
 
+if [ -e /dev/ram0 ]; then
 if [ ! -e /dev/ram0.kernelraw ]; then
 	# arm raw kernel images are usually located at sdram start + 0x8000
 	addpart /dev/ram0 8M@0x8000(kernelraw)
@@ -72,6 +82,7 @@ if [ ! -e /dev/ram0.kernel ]; then
 	# Here we can safely put the kernel without risking of overwriting it
 	# while extracting
 	addpart /dev/ram0 8M@8M(kernel)
+fi
 fi
 
 if [ x$kernel_loc = xnfs ] || [ x$kernel_loc = xtftp ]; then
@@ -96,9 +107,18 @@ elif [ x$kernel_loc = xnor ]; then
 	kdev="/dev/nor0.kernel"
 elif [ x$kernel_loc = xnand ]; then
 	kdev="/dev/nand0.kernel.bb"
+elif [ x$kernel_loc = xsata ]; then
+	addpart /dev/mem 3M@0x3008000(uImage)
+	sata read 3008000 1 5000
+	kdev="/dev/mem.uImage"
+	sata stop
 else
 	echo "error: set kernel_loc to one of 'nfs', 'tftp', 'nand' or 'nor'"
 	exit 1
+fi
+
+if [ -n $usb3_internal_clk ]; then
+	bootargs="$bootargs usb3_internal_clk=$usb3_internal_clk"
 fi
 
 echo "booting kernel of type $kernelimage_type from $kdev"

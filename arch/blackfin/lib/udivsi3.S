@@ -6,7 +6,7 @@
  * Created:
  * Description:
  *
- * Rev:          $Id: udivsi3.S 2795 2007-03-05 06:25:33Z cooloney $
+ * Rev:          $Id: udivsi3.S,v 1.1.1.1 2014/03/12 12:17:40 wokes Exp $
  *
  * Modified:
  *               Copyright 2004-2006 Analog Devices Inc.

@@ -216,7 +216,7 @@ static int add_image(char *str, char *name)
 			map = 1;
 	}
 
-	printf("add file %s(%s)\n", file, readonly ? "ro" : "");
+	printf("add file %s(%s,%s)\n", file, readonly ? "ro" : "", map ? "map" : "");
 
 	fd = open(file, readonly ? O_RDONLY : O_RDWR);
 	hf->fd = fd;

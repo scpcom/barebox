@@ -37,6 +37,10 @@ static void __iomem *l2x0_base;
 #define L2X0_LINE_DATA			0xF10
 #define L2X0_LINE_TAG			0xF30
 #define L2X0_DEBUG_CTRL			0xF40
+#ifdef CONFIG_CPU_32v7 
+#define L2X0_CACHE_LINE_EN              		0x950
+#define L2X0_CACHE_UNLOCK_ALL_LINES_BY_WAY              0x954
+#endif
 
 static inline void cache_wait(void __iomem *reg, unsigned long mask)
 {
@@ -77,12 +81,20 @@ static inline void l2x0_flush_line(unsigned long addr)
 	writel(addr, base + L2X0_INV_LINE_PA);
 }
 
-static inline void l2x0_inv_all(void)
+void l2x0_inv_all(void)
 {
 	/* invalidate all ways */
 	writel(0xff, l2x0_base + L2X0_INV_WAY);
 	cache_wait(l2x0_base + L2X0_INV_WAY, 0xff);
 	cache_sync();
+}
+
+void l2x0_clean_all(void)
+{
+        /* clean all ways */
+        writel(0xff, l2x0_base + L2X0_CLEAN_WAY);
+        cache_wait(l2x0_base + L2X0_CLEAN_WAY, 0xff);
+        cache_sync();
 }
 
 static void l2x0_inv_range(unsigned long start, unsigned long end)
@@ -181,3 +193,58 @@ void __init l2x0_init(void __iomem *base, __u32 aux_val, __u32 aux_mask)
 	outer_cache.disable = l2x0_disable;
 }
 
+#ifdef CONFIG_ARCH_COMCERTO
+void l2x0_latency( __u32 tag_lat, __u32 data_lat)
+{
+        __u32 val;
+
+        val = readl(l2x0_base + L2X0_TAG_LATENCY_CTRL);
+        val &= 0x00000700;
+        val |= tag_lat;
+        writel(val, l2x0_base + L2X0_TAG_LATENCY_CTRL);
+
+        val = readl(l2x0_base + L2X0_DATA_LATENCY_CTRL);
+        val &= 0x00000700;
+        val |= data_lat;
+        writel(val, l2x0_base + L2X0_DATA_LATENCY_CTRL);
+}
+
+void l2x0_enable(void)
+{
+        writel(1, l2x0_base + L2X0_CTRL);
+}
+
+
+void l2x0_lockdown_dc_all_way(void)
+{
+        writel(0xffff, l2x0_base + L2X0_LOCKDOWN_WAY_D);
+}
+
+void l2x0_unlock_dc_all_way(void)
+{
+        writel(0x0, l2x0_base + L2X0_LOCKDOWN_WAY_D);
+}
+
+void l2x0_lockdown_dc_all_way_except_one(int way)
+{
+        writel(~(1 << way), l2x0_base + L2X0_LOCKDOWN_WAY_D);
+}
+
+void l2x0_lock_lines_enable(void)
+{
+        writel(0x1, l2x0_base + L2X0_CACHE_LINE_EN);
+}
+
+void l2x0_lock_lines_disable(void)
+{
+        writel(0x0, l2x0_base + L2X0_CACHE_LINE_EN);
+}
+
+void l2x0_unlock_all_lines(void)
+{
+        writel(0x0, l2x0_base + L2X0_CACHE_LINE_EN);
+        writel(0xffff, l2x0_base + L2X0_CACHE_UNLOCK_ALL_LINES_BY_WAY);
+        cache_wait(l2x0_base + L2X0_CACHE_UNLOCK_ALL_LINES_BY_WAY, 0xffff);
+
+}
+#endif

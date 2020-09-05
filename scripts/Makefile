@@ -10,6 +10,7 @@ hostprogs-y                      += mkimage
 hostprogs-y                      += bareboxenv
 hostprogs-$(CONFIG_ARCH_NETX)    += gen_netx_image
 hostprogs-$(CONFIG_ARCH_OMAP)    += omap_signGP
+hostprogs-$(CONFIG_COMCERTO_C2000) += pfe_fw_convert
 
 always		:= $(hostprogs-y) $(hostprogs-m)
 

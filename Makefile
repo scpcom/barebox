@@ -163,8 +163,8 @@ export srctree objtree VPATH
 # Alternatively CROSS_COMPILE can be set in the environment.
 # Default value for CROSS_COMPILE is not to prefix executables
 
-ARCH            ?= sandbox
-CROSS_COMPILE   ?=
+ARCH            ?= arm
+CROSS_COMPILE   ?= arm-linux-
 
 # Architecture as present in compile.h
 UTS_MACHINE := $(ARCH)
@@ -292,14 +292,22 @@ LINUXINCLUDE    := -Iinclude \
 		   -I$(objtree)/arch/$(ARCH)/include \
                    -include include/generated/autoconf.h
 
-CPPFLAGS        := -D__KERNEL__ -D__BAREBOX__ $(LINUXINCLUDE) -fno-builtin -ffreestanding
+PFEINCLUDE      := -I$(objtree)/drivers/net/comcerto
+
+CPPFLAGS        := -D__KERNEL__ -D__BAREBOX__ $(LINUXINCLUDE) $(PFEINCLUDE) -fno-builtin -ffreestanding
 
 CFLAGS          := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
                    -fno-strict-aliasing -fno-common -Os -pipe
 AFLAGS          := -D__ASSEMBLY__
 
 LDFLAGS		:= -Map barebox.map
-
+ifeq ($(MEM_SIZE),512M)
+CFLAGS += -DMEM_SIZE_512M
+else ifeq ($(MEM_SIZE),1G)
+CFLAGS += -DMEM_SIZE_1G
+else
+$(error "Please set MEM_SIZE=512M or MEM_SIZE=1G")
+endif
 # Read KERNELRELEASE from include/config/kernel.release (if it exists)
 KERNELRELEASE = $(shell cat include/config/kernel.release 2> /dev/null)
 KERNELVERSION = $(VERSION).$(PATCHLEVEL).$(SUBLEVEL)$(EXTRAVERSION)
@@ -409,9 +417,6 @@ PHONY += scripts
 scripts: scripts_basic include/config/auto.conf
 	$(Q)$(MAKE) $(build)=$(@)
 
-# Objects we will link into barebox / subdirs we need to visit
-common-y		:= common/ drivers/ commands/ lib/ net/ fs/
-
 ifeq ($(dot-config),1)
 # Read in config
 -include include/config/auto.conf
@@ -435,11 +440,22 @@ else
 include/config/auto.conf: ;
 endif # $(dot-config)
 
+# Objects we will link into barebox / subdirs we need to visit
+ifdef CONFIG_COMCERTO_DIAG
+common-y		:= common/ drivers/ commands/ lib/ net/ fs/ diags/
+else
+common-y		:= common/ drivers/ commands/ lib/ net/ fs/
+endif
+
 # The all: target is the default when no target is given on the
 # command line.
 # This allow a user to issue only 'make' to build a kernel
 # Defaults barebox but it is usually overridden in the arch makefile
+ifeq ($(CONFIG_COMCERTO_ULOADER)$(CONFIG_COMCERTO_NAND_ULOADER),y)
+all: barebox.bin uloader.bin
+else
 all: barebox.bin
+endif
 
 include $(srctree)/arch/$(ARCH)/Makefile
 
@@ -653,6 +669,13 @@ OBJCOPYFLAGS_barebox.bin = -O binary
 barebox.bin: barebox FORCE
 	$(call if_changed,objcopy)
 
+uloader.bin: uloader
+
+uloader:
+	$(shell cp barebox.bin ./tools/ImageGenarator/.; cd $(srctree)/tools/ImageGenarator/; \
+		 chmod 755 *.sh; ./uldr_gen.sh 1>/dev/null;)
+
+
 ifdef CONFIG_X86
 barebox.S: barebox
 ifdef CONFIG_X86_HDBOOT
@@ -700,8 +723,19 @@ $(sort $(barebox-head) $(barebox-common) ) $(barebox-lds): $(barebox-dirs) ;
 # Error messages still appears in the original language
 
 PHONY += $(barebox-dirs)
-$(barebox-dirs): prepare scripts
+$(barebox-dirs): prepare scripts pfe_fw-prepare
 	$(Q)$(MAKE) $(build)=$@
+
+pfe_fw-prepare:
+ifneq ($(KBUILD_MODULES),)
+	ln -fsn $(srctree)/fw fw;
+endif
+ifdef CONFIG_COMCERTO_DIAG
+	$(MAKE) -s -f $(srctree)/fw/Makefile CONFIG_COMCERTO_DIAG=1
+else
+	$(MAKE) -s -f $(srctree)/fw/Makefile 
+endif
+
 
 # Build the kernel release string
 #
@@ -988,11 +1022,19 @@ MRPROPER_FILES += .config .config.old include/asm .version .old_version \
                   include/generated/autoconf.h include/generated/version.h      \
                   include/generated/utsrelease.h include/config.h           \
 		  Module.symvers tags TAGS cscope*
+clean_uldr:
+	rm -f $(srctree)/uloader.bin
+	rm -f $(srctree)/tools/ImageGenarator/*.bin
+	rm -f $(srctree)/tools/ImageGenarator/privatekey*
+	rm -f $(srctree)/tools/ImageGenarator/publickey*
+	rm -f $(srctree)/tools/ImageGenarator/c2kimage_gen
+
 
 # clean - Delete most, but leave enough to build external modules
 #
 clean: rm-dirs  := $(CLEAN_DIRS)
 clean: rm-files := $(CLEAN_FILES)
+clean: clean_uldr
 clean-dirs      := $(addprefix _clean_,$(srctree) $(barebox-alldirs))
 
 PHONY += $(clean-dirs) clean archclean
@@ -1003,7 +1045,7 @@ clean: archclean $(clean-dirs)
 	$(call cmd,rmdirs)
 	$(call cmd,rmfiles)
 	@find . $(RCS_FIND_IGNORE) \
-		\( -name '*.[oas]' -o -name '*.ko' -o -name '.*.cmd' \
+		\( -name '*.[oas]' -o -name '*.ko' -o -name '.*.cmd' -o -name '*.fw' \
 		-o -name '.*.d' -o -name '.*.tmp' -o -name '*.mod.c' \
 		-o -name '*.symtypes' \) \
 		-type f -print | xargs rm -f

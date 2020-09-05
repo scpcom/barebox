@@ -1,5 +1,8 @@
 /*
- * Copyright (C) 2009 Juergen Beisert, Pengutronix
+ * Copyright (C) Mindspeed Technologies, Inc. 2011. All rights reserved.
+ *
+ * See file CREDITS for list of people who contributed to this
+ * project.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -16,24 +19,33 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
  * MA 02111-1307 USA
  *
+ * @file reset.h
+ * @brief this header file will contain all required
+ * information for  external Device GPIO reset
+ * @date 06/08/2013
  */
 
-/**
- * @file
- * @brief Declarations to communicate with ATA types of drives
- */
+#ifndef __COMCERTO_RESET_H__
+#define __COMCERTO_RESET_H__
 
-#include <types.h>
-#include <driver.h>
 
-/**
- * Access functions from drives through the specified interface
+/* C2000 device blocks which are to be put
+ * in out of reset(GPIO).
  */
-struct ata_interface {
-	/** write a count of sectors from a buffer to the drive */
-	int (*write)(struct device_d*, uint64_t, unsigned, const void*);
-	/** read a count of sectors from the drive into the buffer */
-	int (*read)(struct device_d*, uint64_t, unsigned, void*);
-	/** private interface data */
-	void *priv;
-};
+typedef enum {
+	COMPONENT_ATHEROS_SWITCH=0,
+	COMPONENT_SLIC,
+	COMPONENT_PCIE0,
+	COMPONENT_PCIE1,
+	COMPONENT_USB_HUB,
+	COMPONENT_EXP_DAUGTHER_CARD,
+	COMPONENT_RGMII0,
+	COMPONENT_RGMII1
+}C2000_GEN2_GPIO_RESET_COMPONENT;
+
+void GPIO_reset_external_device(int block,int state);
+#endif
+
+
+
+

@@ -366,7 +366,7 @@ static struct net_connection *net_new(IPaddr_t dest, rx_handler_f *handler,
 		return ERR_PTR(-ENETDOWN);
 
 	con = xzalloc(sizeof(*con));
-	con->packet = xmemalign(32, PKTSIZE);
+	con->packet = net_alloc_packet();
 	con->priv = ctx;
 	memset(con->packet, 0, PKTSIZE);
 
@@ -398,7 +398,7 @@ static struct net_connection *net_new(IPaddr_t dest, rx_handler_f *handler,
 
 	return con;
 out:
-	free(con->packet);
+	net_free_packet(con->packet);
 	free(con);
 	return ERR_PTR(ret);
 }
@@ -436,7 +436,7 @@ struct net_connection *net_icmp_new(IPaddr_t dest, rx_handler_f *handler,
 void net_unregister(struct net_connection *con)
 {
 	list_del(&con->list);
-	free(con->packet);
+	net_free_packet(con->packet);
 	free(con);
 }
 
@@ -489,9 +489,11 @@ static int net_answer_arp(unsigned char *pkt, int len)
 	packet = net_alloc_packet();
 	if (!packet)
 		return 0;
+
 	memcpy(packet, pkt, ETHER_HDR_SIZE + ARP_HDR_SIZE);
 	eth_send(packet, ETHER_HDR_SIZE + ARP_HDR_SIZE);
-	free(packet);
+
+	net_free_packet(packet);
 
 	return 0;
 }
@@ -661,7 +663,7 @@ static int net_init(void)
 	int i;
 
 	for (i = 0; i < PKTBUFSRX; i++)
-		NetRxPackets[i] =  xmemalign(32, PKTSIZE);
+		NetRxPackets[i] =  net_alloc_packet();
 
 	return 0;
 }

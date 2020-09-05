@@ -54,6 +54,47 @@ void __naked __section(.text_entry) exception_vectors(void)
 							 * barebox can skip relocation
 							 */
 		".word _barebox_image_size\n"		/* image size to copy */
+#ifdef CONFIG_M86201
+		".word 0x0000000C\n"      		/* C2K Part Number (initialized with 0x0000000C) */
+#elif defined CONFIG_M86202
+		".word 0x0000000D\n"      		/* C2K Part Number (initialized with 0x0000000D) */
+#elif defined CONFIG_M86203
+		".word 0x0000000E\n"      		/* C2K Part Number (initialized with 0x0000000E) */
+#elif defined CONFIG_M86204
+		".word 0x0000000F\n"      		/* C2K Part Number (initialized with 0x0000000F) */
+#elif defined CONFIG_M86206
+		".word 0x00000010\n"      		/* C2K Part Number (initialized with 0x00000010) */
+#elif defined CONFIG_M86207
+		".word 0x00000011\n"      		/* C2K Part Number (initialized with 0x00000011) */
+#elif defined CONFIG_M86208
+		".word 0x00000012\n"      		/* C2K Part Number (initialized with 0x00000012) */
+#elif defined CONFIG_M86260
+		".word 0x00000001\n"      		/* C2K Part Number (initialized with 0x00000001) */
+#elif defined CONFIG_M86261
+		".word 0x00000002\n"      		/* C2K Part Number (initialized with 0x00000002) */
+#elif defined CONFIG_M86262
+		".word 0x00000003\n"      		/* C2K Part Number (initialized with 0x00000003) */
+#elif defined CONFIG_M86291
+		".word 0x00000004\n"      		/* C2K Part Number (initialized with 0x00000004) */
+#elif defined CONFIG_M86292
+		".word 0x00000005\n"      		/* C2K Part Number (initialized with 0x00000005) */
+#elif defined CONFIG_M86293
+		".word 0x00000006\n"      		/* C2K Part Number (initialized with 0x00000006) */
+#elif defined CONFIG_M86294
+		".word 0x00000007\n"      		/* C2K Part Number (initialized with 0x00000007) */
+#elif defined CONFIG_M86295
+		".word 0x00000008\n"      		/* C2K Part Number (initialized with 0x00000008) */
+#elif defined CONFIG_M86296
+		".word 0x00000009\n"      		/* C2K Part Number (initialized with 0x00000009) */
+#elif defined CONFIG_M86297
+		".word 0x0000000A\n"      		/* C2K Part Number (initialized with 0x0000000A) */
+#elif defined CONFIG_M86298
+		".word 0x0000000B\n"      		/* C2K Part Number (initialized with 0x0000000B) */
+#elif defined CONFIG_M86261_NAS
+		".word 0x00000013\n"      		/* C2K Part Number (initialized with 0x00000013) */
+#else
+		".word 0xFFFFFFFF\n"      		/* C2K Part Number (initialized with 0xFFFFFFFF) */
+#endif
 	);
 }
 

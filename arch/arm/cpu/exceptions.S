@@ -131,6 +131,13 @@ prefetch_abort:
 	.align	5
 .globl data_abort
 data_abort:
+#ifdef CONFIG_COMCERTO_TEST_TZ
+	stmdb sp!, {r0-r1,lr}
+	ldr r1, =return_from_abt
+	mov r0, #1
+	str r0, [r1, #0]
+	ldmfd sp!, {r0-r1,pc}^
+#endif
 	get_bad_stack
 	bad_save_user_regs
 	bl 	do_data_abort

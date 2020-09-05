@@ -157,6 +157,31 @@ config CMD_NAND
 	depends on NAND
 	prompt "nand"
 
+config CMD_NOR
+	tristate
+	default y
+	prompt "nor"
+
+config CMD_UPDATE_SPI
+	tristate
+	default y
+	prompt "update_spi"
+
+config CMD_UPDATE_FAST_SPI
+	tristate
+	default y
+	prompt "update_fspi"
+
+config CMD_UPDATE_I2C
+	tristate
+	default y
+	prompt "update_i2c"
+
+config CMD_COPY
+	tristate
+	default y
+	prompt "copy"
+
 endmenu
 
 menu "console                       "
@@ -306,6 +331,14 @@ config CMD_GO
 	tristate
 	prompt "go"
 
+config CMD_BOOTB
+	default y
+	tristate
+	depends on (COMCERTO_ULOADER || COMCERTO_NAND_ULOADER)
+	prompt "Boot Barebox"
+	help
+	  compile in the 'bootb' command to start Barebox
+
 endmenu
 
 config CMD_TIMEOUT
@@ -409,6 +442,63 @@ config CMD_USB
 	default y
 	help
 	  The usb command allows to rescan for USB devices.
+
+menu "c2000			"
+config CMD_SOCINFO
+	tristate
+	depends on ARCH_COMCERTO
+	default y
+	prompt "socinfo"
+
+config CMD_GEMAC_STATS
+	bool
+	prompt "gemac statistics"
+	default y
+	help
+	  This command allows to dump c2000 gemac statistics counters.
+
+config CMD_PFE_STATS
+	bool
+	prompt "pfe statistics"
+	default y
+	help
+	  This command allows to dump c2000 pfe statistics counters.
+
+config CMD_PFE_DIAGS
+	bool
+	depends on COMCERTO_DIAG
+	prompt "PFE diagnostics"
+	default y if ARCH_COMCERTO
+	help
+	  Display PFE diagnostics messages.
+
+config CMD_AR8328
+	bool
+	depends on AR8328_SWITCH
+	default y
+
+config CMD_DIAGS
+	bool
+	depends on COMCERTO_DIAG
+	prompt "C2000 Diagnostics"
+	default y
+	help
+	  Start C2000 diagnostics.
+
+config CMD_PFE_COMMANDS
+	bool
+	prompt "PFE lib commands"
+	default y if ARCH_COMCERTO
+	help
+	  This command allows PFE lib functions to be called.
+
+config CMD_SATA
+	bool
+	depends on COMCERTO_SATA
+	prompt "C2K SATA Support"
+	default y
+
+endmenu
 
 endmenu
 

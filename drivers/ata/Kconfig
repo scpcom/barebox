@@ -28,4 +28,8 @@ config ATA_BIOS
 	  media to work on. Disadvantage is: Due to its 16 bit nature it is
 	  slow.
 
+config SATA_AHCI
+	bool "SATA AHCI driver"
+	help
+	  Add support for generic SATA AHCI Controller
 endif

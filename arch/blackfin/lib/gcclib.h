@@ -6,7 +6,7 @@
  * Created:
  * Description:
  *
- * Rev:          $Id: gcclib.h 1942 2006-08-03 17:37:22Z vapier $
+ * Rev:          $Id: gcclib.h,v 1.1.1.1 2014/03/12 12:17:40 wokes Exp $
  *
  * Modified:
  *               Copyright 2004-2006 Analog Devices Inc.

@@ -962,7 +962,12 @@ static void cfi_init_mtd(struct flash_info *info)
 	mtd->erase = cfi_mtd_erase;
 	mtd->size = info->size;
 	mtd->name = info->cdev.name;
-	mtd->erasesize = info->eraseregions[1].erasesize; /* FIXME */
+
+	if (info->numeraseregions < 2)
+		mtd->erasesize = info->eraseregions[0].erasesize;
+	else
+		mtd->erasesize = info->eraseregions[1].erasesize;
+
 	mtd->writesize = 1;
 	mtd->subpage_sft = 0;
 	mtd->eraseregions = info->eraseregions;

@@ -40,7 +40,9 @@ struct eth_device {
 	void (*halt) (struct eth_device*);
 	int  (*get_ethaddr) (struct eth_device*, unsigned char *adr);
 	int  (*set_ethaddr) (struct eth_device*, unsigned char *adr);
-
+	void (*get_gemac_stats) (struct eth_device*, unsigned int *stats);
+	int (*get_gemac_stats_len) (struct eth_device*);
+	
 	struct eth_device *next;
 	void *priv;
 
@@ -391,9 +393,25 @@ struct net_connection {
 	void *priv;
 };
 
+static inline void net_free_packet(void *pkt)
+{
+#if defined(CONFIG_NET_COMCERTO_2000)
+	free(pkt - 32);
+#else
+	free(pkt);
+#endif
+}
+
 static inline char *net_alloc_packet(void)
 {
+#if defined(CONFIG_NET_COMCERTO_2000)
+	char *buf;
+
+	buf = xmemalign(32, PKTSIZE + 32); 
+	return buf + 32;
+#else
 	return xmemalign(32, PKTSIZE);
+#endif
 }
 
 struct net_connection *net_udp_new(IPaddr_t dest, uint16_t dport,

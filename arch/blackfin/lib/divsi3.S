@@ -21,7 +21,7 @@
  *                                   R1 - Denominator (i)
  *                                   R0 - Quotient    (o)
  *                 Registers Used : R2-R7,P0-P2
- * Rev:          $Id: divsi3.S 2794 2007-03-05 05:27:47Z cooloney $
+ * Rev:          $Id: divsi3.S,v 1.1.1.1 2014/03/12 12:17:40 wokes Exp $
  *
  * Modified:
  *               Copyright 2004-2006 Analog Devices Inc.

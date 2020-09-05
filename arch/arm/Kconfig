@@ -26,10 +26,20 @@ config ARM_LINUX
 	default y
 	depends on CMD_BOOTZ || CMD_BOOTU || CMD_BOOTM
 
+
 menu "System Type"
 
 choice
 	prompt "ARM system type"
+
+config ARCH_COMCERTO
+        bool "Mindspeed Comcerto"
+	    select GENERIC_GPIO
+        help
+          This enables support for Mindspeed's Comcerto development boards.
+          If you would like to build your kernel to run on one of these boards
+          then you must say 'Y' here. Otherwise say 'N'
+
 
 config ARCH_AT91
 	bool "Atmel AT91"
@@ -72,6 +82,10 @@ config ARCH_VERSATILE
 
 endchoice
 
+if ARCH_COMCERTO
+source arch/arm/mach-comcerto/Kconfig
+source diags/Kconfig
+endif
 source arch/arm/cpu/Kconfig
 source arch/arm/mach-at91/Kconfig
 source arch/arm/mach-ep93xx/Kconfig
