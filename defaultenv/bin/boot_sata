@@ -1,0 +1,12 @@
+#!/bin/sh
+sata 
+#sata read 3008000 1 5000
+satapart 0x3008000 5 0x5000
+sata stop
+## The following gets set in static_config ##
+#bootargs="console=ttyS0,115200n8, init=/sbin/init" 
+#bootargs="$bootargs root=/dev/sda1 rootfstype=ext4 rw noinitrd"
+#bootargs="$bootargs mac_addr=$eth0.ethaddr"
+#bootargs="$bootargs model=$model serial=$serial board_test=$board_test btn_status="
+#############################################
+bootm /dev/mem.uImage

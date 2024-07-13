@@ -29,6 +29,7 @@ obj-y			+= glob.o
 obj-y			+= notifier.o
 obj-y			+= copy_file.o
 obj-y			+= random.o
+obj-$(CONFIG_MTD_NAND_ECC_BCH) += bch.o
 obj-y			+= lzo/
 obj-y			+= show_progress.o
 obj-$(CONFIG_LZO_DECOMPRESS)		+= decompress_unlzo.o

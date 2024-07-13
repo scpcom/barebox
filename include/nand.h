@@ -17,5 +17,6 @@ static inline int dev_remove_bb_dev(const char *name)
 }
 #endif
 
+
 #endif /* __NAND_H__ */
 

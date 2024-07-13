@@ -1,0 +1,72 @@
+
+#!/bin/sh
+###############################################################################
+# This file contains the barebox Environment variables.                       #
+# This file was the old config file and contains static things, mostly for    #
+# debugging, NFS or TFTPing.                                                  #
+#                                                                             #
+# This file will be sourced before /env/config to set default values.         #
+#                                                                             #
+###############################################################################
+
+## barebox and uloader parameters
+uloaderimage=microloader-c2kevm.bin
+bareboximage=barebox-c2kevm.bin
+autoboot_timeout=1
+
+## use 'dhcp' to do dhcp in barebox and in kernel
+## use 'none' if you want to skip kernel ip autoconfiguration
+ip=none           # TODO: Someone needs to take a look at this configuration 
+                  #       option as this is perhaps needed for autoconfiguration
+                  #       of NAS during bootup
+
+## or set your networking parameters here
+#eth0.ipaddr=192.168.1.90
+#eth0.netmask=255.255.255.0
+#eth0.serverip=192.168.1.99
+#eth0.gateway=192.168.2.1
+eth0.ethaddr=00:11:22:33:44:55
+eth1.ethaddr=00:1A:1B:1C:1D:1E
+eth2.ethaddr=00:2A:2B:2C:2D:2E
+
+
+## set kernel and root file system parameters
+kernel_loc=sata           # can be 'nfs', 'tftp', 'nor', 'nand' or 'sata'
+kernelimage_type=uimage   # can be 'uimage', 'zimage', 'raw' or 'raw_lzo'
+kernelimage=uImage        # kernel image name
+
+rootfs_loc=sata           # can be 'net', 'nor', 'initrd', 'nand' or 'sata'
+rootfs_type=ext4          # can be 'jffs2' or 'ubifs'
+rootfsimage=root.$rootfs_type-128k  # rootfs image name
+#nfsroot="$eth0.serverip:/opt/work/busybox/rootfs_arm"
+
+
+## NOR setting
+#nor_device="comcertoflash.0"
+#nor_parts="128k(uloader)ro,512k(barebox)ro,128k(env),4M(kernel),48M(rootfs)"
+#rootfs_mtdblock_nor=4
+
+
+## NAND setting
+#nand_device="comcertonand"
+#nand_parts="1024k(barebox)ro,1024k(bareboxenv),4M(kernel),-(rootfs)"
+#rootfs_mtdblock_nand=8
+
+
+## USB setting
+usb3_internal_clk="yes"
+
+
+## kernel boot command-line parameters
+bootargs="console=ttyS0,115200n8, init=/sbin/init"
+bootargs="$bootargs rootfstype=$rootfs_type rw noinitrd"
+#bootargs="$bootargs root=/dev/sda1 rootfstype=ext4 rw noinitrd" # this is set in boot
+bootargs="$bootargs mac_addr=$eth0.ethaddr"
+bootargs="$bootargs model=$model serial=$serial board_test=$board_test btn_status=$btn_status"
+
+
+
+## rxicmp settings
+rxicmp_startup_env="/env/bin/rxicmp_startup_script"
+
+

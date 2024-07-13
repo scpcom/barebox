@@ -322,7 +322,7 @@ static int do_devinfo(struct command *cmdtp, int argc, char *argv[])
 			return -1;
 		}
 
-		printf("base  : 0x%08x\nsize  : 0x%08x\ndriver: %s\n\n",
+		printf("base  : 0x%zx\nsize  : 0x%zx\ndriver: %s\n\n",
 			dev->map_base, dev->size,
 			dev->driver ? 
 				dev->driver->name : "none");

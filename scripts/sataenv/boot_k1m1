@@ -1,0 +1,7 @@
+#!/bin/sh
+sata 
+satapart 0x3008000 5 0x5000
+sata stop
+# This is customized for each environment variable script
+bootargs="$bootargs root=/dev/md0 raid=autodetect"
+bootm /dev/mem.uImage

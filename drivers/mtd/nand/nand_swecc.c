@@ -17,7 +17,7 @@
  * @chip:	nand chip info structure
  * @buf:	buffer to store read data
  */
-static int nand_read_page_swecc(struct mtd_info *mtd, struct nand_chip *chip,
+int nand_read_page_swecc(struct mtd_info *mtd, struct nand_chip *chip,
 				uint8_t *buf)
 {
 	int i, eccsize = chip->ecc.size;
@@ -58,7 +58,7 @@ static int nand_read_page_swecc(struct mtd_info *mtd, struct nand_chip *chip,
  * @buf:	data buffer
  */
 #ifdef CONFIG_NAND_WRITE
-static void nand_write_page_swecc(struct mtd_info *mtd, struct nand_chip *chip,
+void nand_write_page_swecc(struct mtd_info *mtd, struct nand_chip *chip,
 				  const uint8_t *buf)
 {
 	int i, eccsize = chip->ecc.size;
@@ -84,10 +84,14 @@ void nand_init_ecc_soft(struct nand_chip *chip)
 	chip->ecc.calculate = nand_calculate_ecc;
 	chip->ecc.correct = nand_correct_data;
 	chip->ecc.read_page = nand_read_page_swecc;
+#ifndef CONFIG_COMCERTO_NAND_ULOADER
 	chip->ecc.read_oob = nand_read_oob_std;
+#endif /* CONFIG_COMCERTO_NAND_ULOADER */
 #ifdef CONFIG_NAND_WRITE
 	chip->ecc.write_page = nand_write_page_swecc;
+#ifndef CONFIG_COMCERTO_NAND_ULOADER
 	chip->ecc.write_oob = nand_write_oob_std;
+#endif /* CONFIG_COMCERTO_NAND_ULOADER */
 #endif
 	chip->ecc.size = 256;
 	chip->ecc.bytes = 3;

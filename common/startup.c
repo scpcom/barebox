@@ -164,7 +164,11 @@ void start_barebox (void)
 #endif
 	/* main_loop() can return to retry autoboot, if so just run it again. */
 	for (;;)
+#ifndef CONFIG_HAVE_NOSHELL
 		run_shell();
+#else
+	;	
+#endif
 
 	/* NOTREACHED - no way out of command loop except booting */
 }

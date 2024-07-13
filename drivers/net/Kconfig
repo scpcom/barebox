@@ -102,5 +102,7 @@ config TSE_USE_DEDICATED_DESC_MEM
 
 source "drivers/net/usb/Kconfig"
 
+source "drivers/net/comcerto/Kconfig"
+
 endmenu
 

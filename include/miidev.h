@@ -31,6 +31,11 @@
 #define MIIDEV_FORCE_10		(1 << 0)
 #define MIIDEV_FORCE_LINK	(1 << 1)
 
+typedef enum {MII_SPEED_10M=0, MII_SPEED_100M, MII_SPEED_1000M, MII_SPEED_1000M_PCS} MII_SPEED;
+typedef enum {MII_DUPLEX_HALF=0, MII_DUPLEX_FULL} MII_DUPLEX;
+
+#define BMCR_SPEEDMASK (BMCR_SPEED1000|BMCR_SPEED100)
+
 struct mii_device {
 	struct device_d dev;
 
@@ -49,6 +54,9 @@ void mii_unregister(struct mii_device *mdev);
 int miidev_restart_aneg(struct mii_device *mdev);
 int miidev_wait_aneg(struct mii_device *mdev);
 int miidev_print_status(struct mii_device *mdev);
+int miidev_speed_duplex(struct mii_device *mdev, int *speed, int *duplex);
+void miidev_print_speed_duplex(struct mii_device *mdev, int speed, int duplex);
+int miidev_supports_1000base_t(struct mii_device *mdev);
 
 static int inline mii_write(struct mii_device *dev, int addr, int reg, int value)
 {

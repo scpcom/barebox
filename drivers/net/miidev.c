@@ -28,10 +28,47 @@
 #include <net.h>
 #include <malloc.h>
 
+#define DEBUG_PORT_ADDRESS          29
+#define DEBUG_PORT_DATA             30
+
+static inline int phy_debug_read(struct mii_device *mdev, unsigned int phy_addr, unsigned int reg_addr)
+{
+        mdev->write(mdev, phy_addr, DEBUG_PORT_ADDRESS, reg_addr);
+        return (unsigned int) mdev->read(mdev, phy_addr, DEBUG_PORT_DATA);
+}
+
+static inline void phy_debug_write(struct mii_device *mdev, unsigned int phy_addr, unsigned int reg_addr, unsigned int reg_val)
+{
+        mdev->write(mdev, phy_addr, DEBUG_PORT_ADDRESS, reg_addr);
+        mdev->write(mdev, phy_addr, DEBUG_PORT_DATA, reg_val);
+}
+
+
+void miidev_enable_rgmii_rx_delay(struct mii_device *mdev)
+{
+	uint16_t val;
+        //enable RxClk delay
+        val = phy_debug_read(mdev, mdev->address, 0x0);
+        val |= 0x8000;
+        phy_debug_write(mdev, mdev->address, 0x0, val);
+}
+
+void miidev_enable_rgmii_tx_delay(struct mii_device *mdev)
+{
+        uint16_t val;
+        //enable TxClk delay
+        val = phy_debug_read(mdev, mdev->address, 0x5);
+        val |= 0x100;
+        phy_debug_write(mdev, mdev->address, 0x5, val);
+}
+
+
 int miidev_restart_aneg(struct mii_device *mdev)
 {
-	uint16_t status;
+	uint16_t status, btcr;
 	int timeout;
+
+	printf("%s for PHY%d\n", __func__, mdev->address);
 
 	/*
 	 * Reset PHY, then delay 300ns
@@ -66,6 +103,12 @@ int miidev_restart_aneg(struct mii_device *mdev)
 		status |= ADVERTISE_ALL;
 		mii_write(mdev, mdev->address, MII_ADVERTISE, status);
 
+		 if (miidev_supports_1000base_t(mdev)) {
+			 btcr = mii_read(mdev, mdev->address, MII_CTRL1000);
+			 btcr |= ADVERTISE_1000FULL | ADVERTISE_1000HALF;
+			 mii_write(mdev, mdev->address, MII_CTRL1000, btcr);
+		 }
+
 		mii_write(mdev, mdev->address, MII_BMCR, BMCR_ANENABLE | BMCR_ANRESTART);
 	}
 
@@ -95,7 +138,7 @@ int miidev_wait_aneg(struct mii_device *mdev)
 			printf("%s: Autonegotiation failed. status: 0x%04x\n", mdev->cdev.name, status);
 			return -1;
 		}
-	} while (!(status & BMSR_LSTATUS));
+	} while (!(status & BMSR_ANEGCOMPLETE));
 
 	return 0;
 }
@@ -138,6 +181,150 @@ int miidev_print_status(struct mii_device *mdev)
 err_out:
 	printf("%s: failed to read\n", mdev->cdev.name);
 	return -1;
+}
+
+int miidev_supports_1000base_t(struct mii_device *mdev)
+{
+        unsigned short reg;
+
+        reg = mii_read(mdev, mdev->address, MII_BMSR);
+        if (reg < 0) {
+                printf("PHY bmsr read failed, assuming no 1000bT support\n");
+                return (0);
+        }
+
+        if (reg & BMSR_ESTATEN) {
+				reg = mii_read(mdev, mdev->address, MII_ESTATUS);
+                if (reg < 0) {
+                        printf("PHY exsr read failed, assuming no 1000bT support\n");
+                        return (0);
+                }
+
+                if (reg & (ESTATUS_1000_TFULL | ESTATUS_1000_THALF))
+                        return (1);
+        }
+
+        return (0);
+}
+
+int miidev_speed_duplex(struct mii_device *mdev, int *speed, int *duplex)
+{
+        unsigned short bmcr, btcr, btsr, anlpar, anar;
+
+        /* Check Basic Management Control Register first. */
+        bmcr = mii_read(mdev, mdev->address, MII_BMCR);
+        if (bmcr < 0) {
+                printf("PHY bmcr read failed\n");
+                return -1;
+        }
+
+        /* Check if auto-negotiation is on. */
+        if (bmcr & BMCR_ANENABLE) {
+                if (miidev_wait_aneg(mdev)) {
+                        printf("PHY auto-negotiation error\n");
+                        return -1;
+                }
+
+                if (miidev_supports_1000base_t(mdev)) {
+						btcr = mii_read(mdev, mdev->address, MII_CTRL1000);
+                        if (btcr < 0) {
+                                printf("PHY btcr read failed\n");
+                                return -1;
+                        }
+
+                        btsr = mii_read(mdev, mdev->address, MII_STAT1000);
+                        if (btsr < 0) {
+                                printf("PHY btsr read failed\n");
+                                return -1;
+                        }
+
+                        if ((btcr & ADVERTISE_1000FULL) && (btsr & LPA_1000FULL)) {
+                                *speed = MII_SPEED_1000M;
+                                *duplex = MII_DUPLEX_FULL;
+                                return 0;
+                        }
+
+                        if ((btcr & ADVERTISE_1000HALF) && (btsr & LPA_1000HALF)) {
+                                *speed = MII_SPEED_1000M;
+                                *duplex = MII_DUPLEX_HALF;
+                                return 0;
+                        }
+                }
+
+                /* Get link partner abilities results. */
+                anlpar = mii_read(mdev, mdev->address, MII_LPA);
+                if (anlpar < 0) {
+                        printf("PHY anlpar read failed\n");
+                        return -1;
+                }
+
+                /* Get advertised abilities. */
+                anar = mii_read(mdev, mdev->address, MII_ADVERTISE);
+                if (anar < 0) {
+                        printf("PHY anar register read failed\n");
+                        return -1;
+                }
+
+                if ((anlpar & anar & ADVERTISE_100FULL)) {
+                        *speed = MII_SPEED_100M;
+                        *duplex = MII_DUPLEX_FULL;
+                } else if ((anlpar & anar & ADVERTISE_100HALF)) {
+                        *speed = MII_SPEED_100M;
+                        *duplex = MII_DUPLEX_HALF;
+                } else if ((anlpar & anar & ADVERTISE_10FULL)) {
+                        *speed = MII_SPEED_10M;
+                        *duplex = MII_DUPLEX_FULL;
+                } else {
+                        *speed = MII_SPEED_10M;
+                        *duplex = MII_DUPLEX_HALF;
+                }
+
+                return 0;
+        }
+
+        /* Get speed from basic control settings. */
+        if ((bmcr & BMCR_SPEEDMASK) == BMCR_SPEED1000)
+                *speed = MII_SPEED_1000M;
+        else if ((bmcr & BMCR_SPEEDMASK) == BMCR_SPEED100)
+                *speed = MII_SPEED_100M;
+        else
+                *speed = MII_SPEED_10M;
+
+        if (bmcr & BMCR_FULLDPLX)
+                *duplex = MII_DUPLEX_FULL;
+        else
+                *duplex = MII_DUPLEX_HALF;
+
+        return 0;
+}
+
+void miidev_print_speed_duplex(struct mii_device *mdev, int speed, int duplex)
+{
+	char *speed_str, *duplex_str;
+
+	switch (speed) {
+	case MII_SPEED_10M:
+		speed_str = "10";
+		break;
+	case MII_SPEED_100M:
+		speed_str = "100";
+		break;
+	case MII_SPEED_1000M:
+		speed_str = "1000";
+		break;
+	case MII_SPEED_1000M_PCS:
+		speed_str = "1000_PCS";
+		break;
+	default:
+		speed_str ="UNKNOWN";
+	}
+
+	if (duplex == MII_DUPLEX_FULL)
+		duplex_str = "FULL";
+	else
+		duplex_str = "HALF";
+
+	printf ("%s: Link is %s/%s\n", mdev->cdev.name, speed_str, duplex_str);
 }
 
 static ssize_t miidev_read(struct cdev *cdev, void *_buf, size_t count, ulong offset, ulong flags)

@@ -1,0 +1,11 @@
+#!/bin/sh
+#
+# rxicmp_startup_script - TFTP's and executes startup.sh script required for 
+#                         initiating the rxicmp boot sequence.
+#
+
+dhcp
+tftp startup.sh
+/startup.sh
+#tftp $rootpath/$bootfile /dev/mem
+#bootm /dev/mem

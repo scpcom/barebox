@@ -1,9 +1,22 @@
 #!/bin/sh
 
 PATH=/env/bin
-export PATH
+#export PATH
 
+## Button initial state
+btn_status=0
+get_button_status
+
+. /env/bin/static_config
 . /env/config
+
+# NOTE: rxicmp requires 'rxicmp_startup_env' barebox env variable to be
+#       pointing to an executable script (ex: /env/bin/rxicmp_startup_script)
+rxicmp
+
+# Western Digital: For now for tftping...
+addpart /dev/mem 3M@0x3008000(uImage)
+
 if [ -e /dev/nor0 -a -n "$nor_parts" ]; then
 	addpart /dev/nor0 $nor_parts
 fi
@@ -28,7 +41,16 @@ echo
 echo -n "Hit any key to stop autoboot: "
 timeout -a $autoboot_timeout
 if [ $? != 0 ]; then
+	. /env/bin/_update_help
 	exit
 fi
 
-boot
+
+#./boot
+sata                  # initialize SATA
+sataenv run 7         # try to run script from partition 7
+sataenv run 8         # try to run script from partition 8
+. /env/bin/boot_sata  # if all else fails, use this script to boot
+led system_led red
+
+

@@ -1,0 +1,71 @@
+
+Import('env')
+
+import sys
+import os
+import re
+import string
+import SCons.Script
+import tarfile
+
+def run(cmd):
+    """Run a command and decipher the return code. Exit by default."""
+    res = os.system(cmd)
+    # Assumes that if a process doesn't call exit, it was successful
+    if( os.WIFEXITED(res)):
+    	code = os.WEXITSTATUS(res)
+	if code != 0:
+	   print "Error: return code: " + str(code)
+           if SCons.Script.keep_going_on_error == 0:
+	     sys.exit(code)
+
+# Establish the base directory
+base_dir = Dir("#.").abspath
+
+# Create directory for the contents of the archive
+build_dir = base_dir + '/build_dir'
+print "build_dir = " + build_dir
+if not os.path.exists(build_dir):
+    os.makedirs(build_dir)
+
+os.chdir(build_dir)
+
+# Untar the archive into the build_dir
+
+tar = None
+for item in os.listdir('..'):
+  if not re.search(r'\.tar\.', item):
+    continue
+
+  tarfilename = os.path.realpath(base_dir + '/' + item)
+  if not os.path.isfile(tarfilename):
+    print "Error: " + tarfilename + " is not a file."
+    sys.exit(-1)
+
+  tar = tarfile.open(os.path.realpath(tarfilename))
+  tar.extractall()
+  tar.close()
+  break
+
+if not tar:
+  print "No tar file found."
+  sys.exit(-1)
+
+# Change to the versioned directory
+for item in os.listdir('.'):
+  build_version = item
+os.chdir(build_version)
+
+# bootstrap and configure
+#target_dir = base_dir + '/crosstool-ng' + '/' + build_version
+target_dir = base_dir + '/crosstool-ng'
+if not os.path.exists(target_dir):
+    os.makedirs(target_dir)
+
+run('./bootstrap')
+run('./configure --prefix=' + target_dir)
+
+run('make')
+run('make install')
+
+exit(0)

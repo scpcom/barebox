@@ -1,0 +1,17 @@
+# Top-level SConstruct comipler builds
+
+import os
+import os.path
+import sys
+
+ct = '/xtools/crosstool-ng/bin'
+
+env = Environment(ENV = {'CTPATH' : Dir(ct).abspath })
+os.environ['LD_LIBRARY_PATH'] = ''
+#print env['ENV']['CTPATH']
+
+env.SConscript( ['arm-cortex_a8-linux-gnueabi/SConscript',
+		'arm-cortex_a9-linux-gnueabi/SConscript'],
+		exports = 'env' )
+
+

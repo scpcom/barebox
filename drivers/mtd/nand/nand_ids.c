@@ -32,6 +32,7 @@
 */
 struct nand_flash_dev nand_flash_ids[] = {
 
+#ifndef CONFIG_COMCERTO_NAND_ULOADER
 #ifdef CONFIG_MTD_NAND_MUSEUM_IDS
 	{__NANDSTR("NAND 1MiB 5V 8-bit"),	0x6e, 256, 1, 0x1000, 0},
 	{__NANDSTR("NAND 2MiB 5V 8-bit"),	0x64, 256, 2, 0x1000, 0},
@@ -75,6 +76,7 @@ struct nand_flash_dev nand_flash_ids[] = {
 
 	{__NANDSTR("NAND 256MiB 3,3V 8-bit"),	0x71, 512, 256, 0x4000, 0},
 
+#endif /* CONFIG_COMCERTO_NAND_ULOADER */
 	/*
 	 * These are the new chips with large page size. The pagesize and the
 	 * erasesize is determined from the extended id bytes
@@ -82,6 +84,7 @@ struct nand_flash_dev nand_flash_ids[] = {
 #define LP_OPTIONS (NAND_SAMSUNG_LP_OPTIONS | NAND_NO_READRDY | NAND_NO_AUTOINCR)
 #define LP_OPTIONS16 (LP_OPTIONS | NAND_BUSWIDTH_16)
 
+#ifndef CONFIG_COMCERTO_NAND_ULOADER
 	/*512 Megabit */
 	{__NANDSTR("NAND 64MiB 1,8V 8-bit"),	0xA2, 0,  64, 0, LP_OPTIONS},
 	{__NANDSTR("NAND 64MiB 3,3V 8-bit"),	0xF2, 0,  64, 0, LP_OPTIONS},
@@ -98,8 +101,11 @@ struct nand_flash_dev nand_flash_ids[] = {
 	{__NANDSTR("NAND 256MiB 1,8V 8-bit"),	0xAA, 0, 256, 0, LP_OPTIONS},
 	{__NANDSTR("NAND 256MiB 3,3V 8-bit"),	0xDA, 0, 256, 0, LP_OPTIONS},
 	{__NANDSTR("NAND 256MiB 1,8V 16-bit"),	0xBA, 0, 256, 0, LP_OPTIONS16},
+#endif /* CONFIG_COMCERTO_NAND_ULOADER */
+
 	{__NANDSTR("NAND 256MiB 3,3V 16-bit"),	0xCA, 0, 256, 0, LP_OPTIONS16},
 
+#ifndef CONFIG_COMCERTO_NAND_ULOADER
 	/* 4 Gigabit */
 	{__NANDSTR("NAND 512MiB 1,8V 8-bit"),	0xAC, 0, 512, 0, LP_OPTIONS},
 	{__NANDSTR("NAND 512MiB 3,3V 8-bit"),	0xDC, 0, 512, 0, LP_OPTIONS},
@@ -117,7 +123,9 @@ struct nand_flash_dev nand_flash_ids[] = {
 	{__NANDSTR("NAND 2GiB 3,3V 8-bit"),	0xD5, 0, 2048, 0, LP_OPTIONS},
 	{__NANDSTR("NAND 2GiB 1,8V 16-bit"),	0xB5, 0, 2048, 0, LP_OPTIONS16},
 	{__NANDSTR("NAND 2GiB 3,3V 16-bit"),	0xC5, 0, 2048, 0, LP_OPTIONS16},
+#endif
 
+#ifndef CONFIG_COMCERTO_NAND_ULOADER
 	/*
 	 * Renesas AND 1 Gigabit. Those chips do not support extended id and
 	 * have a strange page/block layout !  The chosen minimum erasesize is
@@ -133,6 +141,7 @@ struct nand_flash_dev nand_flash_ids[] = {
 	 BBT_AUTO_REFRESH
 	},
 
+#endif /* CONFIG_COMCERTO_NAND_ULOADER */
 	{NULL,}
 };
 

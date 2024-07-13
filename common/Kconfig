@@ -255,8 +255,8 @@ choice
 		  simple shell. No if/then, no return values from commands, no loops
 
 	config SHELL_NONE
-		depends on HAVE_NOSHELL
 		bool "no shell (noninteractive build)"
+		depends on HAVE_NOSHELL
 		help
 		  No shell at all. This means no shell is started and your board has
 		  to provide a run_shell() function which is started at the end of
@@ -300,6 +300,10 @@ config AUTO_COMPLETE
 	bool
 	depends on CMDLINE_EDITING
 	prompt "Enable auto completion"
+
+config MEM_SIZE
+	bool
+	prompt "Get available RAM size"
 
 config MENU
 	bool
