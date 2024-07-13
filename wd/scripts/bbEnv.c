@@ -7,7 +7,6 @@
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <mtd/mtd-user.h>
-#include "../../lib/crc32.c"
 
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 #define __BYTE_ORDER __LITTLE_ENDIAN
@@ -16,6 +15,7 @@
 #endif
 
 typedef unsigned int uint32_t;
+#include "../../lib/crc32.c"
 #include "../../include/envfs.h"	// defines struct envfs_inode, envfs_super
 
 
