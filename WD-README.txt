@@ -1,13 +1,10 @@
 Modification of or tampering with the product, including but not limited to any Open Source Software, is solely at Your own risk. Western Digital is not responsible for any such modification or tampering. Western Digital will not support any product in which You have or have attempted to modify the software or hardware supplied by Western Digital.
-----------------------------------------------------------
-
 
 Barebox Build Instructions:
 
 Prepare build environment
 ------------------------------------------------------
-- untar provided toolchain to a directory (see ./toolchain/arm-cortex_a9-linux-gnueabi-4.7.2.60.tgz)
-  If you wish to rebuild toolchain see instructions in ./toolchain/WD-README.txt
+- build arm-cortex_a9-linux-gnueabi toolchain (see instructions on how to build toolchain inside the toolchain package).
 - export PATH=</path/to/toolchain>/bin:$PATH
 - export CROSS_COMPILE=arm-cortex_a9-linux-gnueabi-
 - export ARCH=arm
